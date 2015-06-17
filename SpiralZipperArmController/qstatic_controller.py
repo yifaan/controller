@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+from math import sqrt
+
+# Parameters
+B_1 = [-1.0, 1.0, 0.0]  # Base point 1
+B_2 = [0.0, -1.0, 0.0]  # Base point 2
+B_3 = [1.0, 1.0, 0.0]   # Base point 3
+INTERP_STEPS = 10       # The number of interpolation steps
+
+# Input: reference trajectory - traj. start and end points
+w_s = [0.2, 0.2, 2.4]
+w_e = [-0.2, 0.2, 2.0]
+w = []
+l = []
+
+# Interpolate between the two points along the straight line.
+for i in range(INTERP_STEPS):
+    w_t = [w_s[0]+(w_e[0]-w_s[0])/INTERP_STEPS*i,
+           w_s[1]+(w_e[1]-w_s[1])/INTERP_STEPS*i,
+           w_s[2]+(w_e[2]-w_s[2])/INTERP_STEPS*i]
+    w.append(w_t)
+w.append(w_e)
+
+print 'waypoints'
+for i in w:
+    print '%.2f, %.2f, %.2f' % (i[0], i[1], i[2])
+
+# Interpolate between the two points along the geodesic on the sphere.
+
+# 1. Map the input trajectory into cable/arm length trajectory.
+# 1.1. Map waypoint w_j=(x_j, y_j, z_j) into l_j=(a_j; b1_j, b2_j, b3_j)
+for i in w:
+    l_t = [sqrt(i[0]**2 + i[1]**2 + i[2]**2),
+           sqrt((i[0] - B_1[0])**2 + (i[1] - B_1[1])**2 + (i[2] - B_1[2])**2),
+           sqrt((i[0] - B_2[0])**2 + (i[1] - B_2[1])**2 + (i[2] - B_2[2])**2),
+           sqrt((i[0] - B_3[0])**2 + (i[1] - B_3[1])**2 + (i[2] - B_3[2])**2)]
+    l.append(l_t)
+
+print 'length coordinates'
+for i in l:
+    print '%.2f, %.2f, %.2f, %.2f' % (i[0], i[1], i[2], i[3])
+# 2. Coordinate cable/arm lengths along the trajectory (slowly).

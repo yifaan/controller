@@ -11,11 +11,12 @@ class controller():
     def __init__(self):
         # change the number of modules according to the application
         # modules = {0xED: 'MOD1', 0xDE: 'MOD2'}
-        modules = {0xDE: 'MOD1', 0xE7: 'MOD2'}
+        modules = {0xDE: 'MOD1', 0xE7: 'MOD2', 0xAB: 'MOD3'}
         self.c = L.Cluster()
         self.c.populate(len(modules), modules)
         self.pos_1 = self.c.at.MOD1.get_pos()
         self.pos_2 = self.c.at.MOD2.get_pos()
+	self.pos_3 = self.c.at.MOD3.get_pos()
         self.range = 5  # about 0.6 degree
         print "initialize done"
 
@@ -23,6 +24,7 @@ class controller():
     def get_pos(self):
         self.pos_1 = self.c.at.MOD1.get_pos()
         self.pos_2 = self.c.at.MOD2.get_pos()
+	self.pos_3 = self.c.at.MOD3.get_pos()
         # sys.stdout.write("Cheleb:%5d\r" % self.pos_1)
         # sys.stdout.write("Canopus:%5d\r" % self.pos_2)
         # sys.stdout.flush()
@@ -67,13 +69,22 @@ class controller():
                 self.get_pos()
             except KeyboardInterrupt:
                 self.shut_down()
-                print "JAJAJA"
                 break
+
+    def pos2len(self, x, y, z):
+        #(x1=,y1=,z1=), (x2=,y2=,z2=)(x3=,y3=,z3=) asda
+        len1 = ((x - x1) ** 2 + (y - y1) ** 2 + (z - z1) ** 2) ** 0.5
+        len2 = ((x - x2) ** 2 + (y - y2) ** 2 + (z - z2) ** 2) ** 0.5
+        len1 = ((x - x1) ** 2 + (y - y1) ** 2 + (z - z1) ** 2) ** 0.5
+        return (len1, len2, len3)
 
     # generate a valid trajectory from current position to
     # the desired position
     # rpm = 80 * set_torque(value) - 1
     # deg/sec = 480 * set_torque(value) - 6
+    # 120 mm per rotation, 120/360 = 1/3 mm/deg
+    # mm/sec = 160 * set_torque(value
+) - 2
     def trajGenerator(self, t):
         x = 7000 + 300 * t + 1.0 / 2 * 80 * t * t
         speed = 300 + 80.0 * t
@@ -109,19 +120,23 @@ if __name__ == "__main__":
     t0 = time()
 
     while 1:
-        traj = c1.trajGenerator(time() - t0)
+        try:
+            traj = c1.trajGenerator(time() - t0)
 
-        sys.stdout.write("%.2f\t" % (time() - t0))
-        sys.stdout.write("%5d\t" % traj[0])
-        sys.stdout.write("%5d\n" % c1.pos_1)
+            sys.stdout.write("%.2f\t" % (time() - t0))
+            sys.stdout.write("%5d\t" % traj[0])
+            sys.stdout.write("%5d\n" % c1.pos_1)
 
-        sys.stdout.flush()
+            sys.stdout.flush()
 
-        if (traj[2]):
-            c1.moveMOD1(traj[1])
-            c1.moveMOD2(traj[1])
-            # sys.stdout.write("\t\t%5d\r" % traj[0])
-        else:
-            break
+            if (traj[2]):
+                c1.moveMOD1(traj[1])
+                c1.moveMOD2(traj[1])
+                # sys.stdout.write("\t\t%5d\r" % traj[0])
+            else:
+                break
+
+        except KeyboardInterrupt:
+	    break
 
     c1.shut_down()

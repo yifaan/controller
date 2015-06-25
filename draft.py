@@ -16,7 +16,14 @@ class controller():
         self.c.populate(len(modules), modules)
         self.pos_1 = self.c.at.MOD1.get_pos()
         self.pos_2 = self.c.at.MOD2.get_pos()
-	self.pos_3 = self.c.at.MOD3.get_pos()
+	    self.pos_3 = self.c.at.MOD3.get_pos()
+        # position of the three motor
+        self.x1 = 0
+        self.y1 = 0
+        self.x2 = 0
+        self.y2 = 0
+        self.x3 = 0
+        self.y3 = 0
         self.range = 5  # about 0.6 degree
         print "initialize done"
 
@@ -24,10 +31,7 @@ class controller():
     def get_pos(self):
         self.pos_1 = self.c.at.MOD1.get_pos()
         self.pos_2 = self.c.at.MOD2.get_pos()
-	self.pos_3 = self.c.at.MOD3.get_pos()
-        # sys.stdout.write("Cheleb:%5d\r" % self.pos_1)
-        # sys.stdout.write("Canopus:%5d\r" % self.pos_2)
-        # sys.stdout.flush()
+	    self.pos_3 = self.c.at.MOD3.get_pos()
 
     # move the motor according to the speed
     def moveMOD1(self, speed):
@@ -71,6 +75,7 @@ class controller():
                 self.shut_down()
                 break
 
+    # the inverse kinematics of the arm
     def pos2len(self, x, y, z):
         #(x1=,y1=,z1=), (x2=,y2=,z2=)(x3=,y3=,z3=) asda
         len1 = ((x - x1) ** 2 + (y - y1) ** 2 + (z - z1) ** 2) ** 0.5
@@ -78,13 +83,28 @@ class controller():
         len1 = ((x - x1) ** 2 + (y - y1) ** 2 + (z - z1) ** 2) ** 0.5
         return (len1, len2, len3)
 
+    # forward kinematics of the 
+    def len2pos(self, l1, l2, l3):
+        # mat1 * [x,y]' = mat2
+        mat1 = [[2*(self.x3 - self.x1),2*(self.y3 - self.y1)],[2*(self.x2 - self.x1),2*(self.x3 - self.y1)]]
+        det1 = mat1[0][0] * mat1[1][1] - mat1[0][1] * mat1[1][0]
+        mat2 = [l1**2 - l3**2 - (self.x1**2 - self.x3**2) - (self.y1**2 - self.y3**2), l1**2 - l2**2 - (self.x1**2 - self.x2**2) - (self.y1**2 - self.y2**2)]
+        inv_mat1 = [[mat1[1][1],-mat1[0][1]],[-mat1[1][0],mat1[0][0]]]
+        x = (mat2[0] * inv_mat1[0][0] + mat2[1] * inv_mat1[0][1]) / det1
+        y = (mat2[0] * inv_mat1[1][0] + mat2[1] * inv_mat1[1][1]) / det1
+        z = (l1**2 - (x - self.x1)**2  - (y - self.y1)**2) ** 0.5
+        return (x, y, z)
+
+    # change endeffector speed to motor speed
+    def end2motor():
+        pass
+
     # generate a valid trajectory from current position to
     # the desired position
     # rpm = 80 * set_torque(value) - 1
     # deg/sec = 480 * set_torque(value) - 6
     # 120 mm per rotation, 120/360 = 1/3 mm/deg
-    # mm/sec = 160 * set_torque(value
-) - 2
+    # mm/sec = 160 * set_torque(value) - 2
     def trajGenerator(self, t):
         x = 7000 + 300 * t + 1.0 / 2 * 80 * t * t
         speed = 300 + 80.0 * t

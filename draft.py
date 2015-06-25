@@ -104,9 +104,25 @@ class controller():
         z = (l1**2 - (x - self.x1)**2  - (y - self.y1)**2) ** 0.5
         return (x, y, z)
 
-    # change endeffector speed to motor speed
-    def end2motor():
-        pass
+    # change endeffector speed to motor rotational speed
+    def end2servo(self, x, y, z, Vx, Vy, Vz):
+        # get the norm of the vector of each cable 
+        l1_norm = ((x - self.x1)**2 + (y - self.y1)**2 + z**2)**0.5
+        l2_norm = ((x - self.x2)**2 + (y - self.y2)**2 + z**2)**0.5
+        l3_norm = ((x - self.x3)**2 + (y - self.y3)**2 + z**2)**0.5
+        # get the unit vector on each cable's direction
+        u1 = [(x - self.x1) / l1_norm, (y - self.y1) / l1_norm, z / l1_norm]
+        u2 = [(x - self.x2) / l2_norm, (y - self.y2) / l2_norm, z / l2_norm]
+        u3 = [(x - self.x3) / l3_norm, (y - self.y3) / l3_norm, z / l3_norm]
+        # calculate the speed of each cable, mm/s
+        V1 = Vx * u1[0] + Vy * u1[1] + Vz * u1[2]
+        V2 = Vx * u2[0] + Vy * u2[1] + Vz * u2[2]
+        V3 = Vx * u3[0] + Vy * u3[1] + Vz * u3[2]
+        # calculate the rotational speed of the motor, 
+        # 120 mm per rotation, 120/360 = 1/3 mm/deg
+
+        return ()
+
 
     # generate a valid trajectory from current position to
     # the desired position

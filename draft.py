@@ -11,12 +11,12 @@ class controller():
     def __init__(self):
         # change the number of modules according to the application
         # modules = {0xED: 'MOD1', 0xDE: 'MOD2'}
-        modules = {0xDE: 'MOD1', 0xE7: 'MOD2', 0xAB: 'MOD3'}
+        modules = {0xE3: 'MOD1', 0xE6: 'MOD2', 0xDF: 'MOD3'}
         self.c = L.Cluster()
         self.c.populate(len(modules), modules)
         self.pos_1 = self.c.at.MOD1.get_pos()
         self.pos_2 = self.c.at.MOD2.get_pos()
-	    self.pos_3 = self.c.at.MOD3.get_pos()
+	self.pos_3 = self.c.at.MOD3.get_pos()
         # position of the three motor
         self.x1 = 0
         self.y1 = 0
@@ -31,7 +31,7 @@ class controller():
     def get_pos(self):
         self.pos_1 = self.c.at.MOD1.get_pos()
         self.pos_2 = self.c.at.MOD2.get_pos()
-	    self.pos_3 = self.c.at.MOD3.get_pos()
+	self.pos_3 = self.c.at.MOD3.get_pos()
 
     # move the motor according to the speed
     def moveMOD1(self, speed):
@@ -50,9 +50,10 @@ class controller():
 
     # move motor to a certain position
     def move_to(self, x, y, z, speed):
-        while ((abs(x - self.pos_1) > self.range) or (abs(y - self.pos_2) > self.range)):
+        while ((abs(x - self.pos_1) > self.range) or (abs(y - self.pos_2) > self.range) or (abs(z - self.pos_3) > self.range)):
             sys.stdout.write("%4d\t" % self.pos_1)
-            sys.stdout.write("%4d\r" % self.pos_2)
+            sys.stdout.write("%4d\t" % self.pos_2)
+            sys.stdout.write("%4d\r" % self.pos_3)
             try:
                 # module 1
                 if ((x - self.pos_1) > self.range):
@@ -69,6 +70,14 @@ class controller():
                     self.c.at.MOD2.set_torque(-speed)
                 else:
                     self.c.at.MOD2.set_torque(0)
+
+                # module 3
+                if ((z - self.pos_3) > self.range):
+                    self.c.at.MOD3.set_torque(speed)
+                elif ((self.pos_3 - z) > self.range):
+                    self.c.at.MOD3.set_torque(-speed)
+                else:
+                    self.c.at.MOD3.set_torque(0)
 
                 self.get_pos()
             except KeyboardInterrupt:
@@ -131,7 +140,9 @@ class controller():
 if __name__ == "__main__":
     c1 = controller()
 
-    c1.move_to(7000, 7000, 0, 0.08)
+    c1.move_to(3000, 3000, 3000, 0.08)
+    c1.move_to(10000, 10000, 10000, 0.08)
+    c1.move_to(3000, 3000, 3000, 0.08)
 
     c1.stop()
 
@@ -139,7 +150,7 @@ if __name__ == "__main__":
 
     t0 = time()
 
-    while 1:
+    while 0:
         try:
             traj = c1.trajGenerator(time() - t0)
 

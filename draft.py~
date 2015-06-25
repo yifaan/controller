@@ -11,12 +11,19 @@ class controller():
     def __init__(self):
         # change the number of modules according to the application
         # modules = {0xED: 'MOD1', 0xDE: 'MOD2'}
-        modules = {0xDE: 'MOD1', 0xE7: 'MOD2', 0xAB: 'MOD3'}
+        modules = {0xE3: 'MOD1', 0xE6: 'MOD2', 0xDF: 'MOD3'}
         self.c = L.Cluster()
         self.c.populate(len(modules), modules)
         self.pos_1 = self.c.at.MOD1.get_pos()
         self.pos_2 = self.c.at.MOD2.get_pos()
 	self.pos_3 = self.c.at.MOD3.get_pos()
+        # position of the three motor
+        self.x1 = 0
+        self.y1 = 0
+        self.x2 = 0
+        self.y2 = 0
+        self.x3 = 0
+        self.y3 = 0
         self.range = 5  # about 0.6 degree
         print "initialize done"
 
@@ -25,9 +32,6 @@ class controller():
         self.pos_1 = self.c.at.MOD1.get_pos()
         self.pos_2 = self.c.at.MOD2.get_pos()
 	self.pos_3 = self.c.at.MOD3.get_pos()
-        # sys.stdout.write("Cheleb:%5d\r" % self.pos_1)
-        # sys.stdout.write("Canopus:%5d\r" % self.pos_2)
-        # sys.stdout.flush()
 
     # move the motor according to the speed
     def moveMOD1(self, speed):
@@ -46,9 +50,10 @@ class controller():
 
     # move motor to a certain position
     def move_to(self, x, y, z, speed):
-        while ((abs(x - self.pos_1) > self.range) or (abs(y - self.pos_2) > self.range)):
+        while ((abs(x - self.pos_1) > self.range) or (abs(y - self.pos_2) > self.range) or (abs(z - self.pos_3) > self.range)):
             sys.stdout.write("%4d\t" % self.pos_1)
-            sys.stdout.write("%4d\r" % self.pos_2)
+            sys.stdout.write("%4d\t" % self.pos_2)
+            sys.stdout.write("%4d\r" % self.pos_3)
             try:
                 # module 1
                 if ((x - self.pos_1) > self.range):
@@ -66,11 +71,20 @@ class controller():
                 else:
                     self.c.at.MOD2.set_torque(0)
 
+                # module 3
+                if ((z - self.pos_3) > self.range):
+                    self.c.at.MOD3.set_torque(speed)
+                elif ((self.pos_3 - z) > self.range):
+                    self.c.at.MOD3.set_torque(-speed)
+                else:
+                    self.c.at.MOD3.set_torque(0)
+
                 self.get_pos()
             except KeyboardInterrupt:
                 self.shut_down()
                 break
 
+    # the inverse kinematics of the arm
     def pos2len(self, x, y, z):
         #(x1=,y1=,z1=), (x2=,y2=,z2=)(x3=,y3=,z3=) asda
         len1 = ((x - x1) ** 2 + (y - y1) ** 2 + (z - z1) ** 2) ** 0.5
@@ -78,13 +92,28 @@ class controller():
         len1 = ((x - x1) ** 2 + (y - y1) ** 2 + (z - z1) ** 2) ** 0.5
         return (len1, len2, len3)
 
+    # forward kinematics of the 
+    def len2pos(self, l1, l2, l3):
+        # mat1 * [x,y]' = mat2
+        mat1 = [[2*(self.x3 - self.x1),2*(self.y3 - self.y1)],[2*(self.x2 - self.x1),2*(self.x3 - self.y1)]]
+        det1 = mat1[0][0] * mat1[1][1] - mat1[0][1] * mat1[1][0]
+        mat2 = [l1**2 - l3**2 - (self.x1**2 - self.x3**2) - (self.y1**2 - self.y3**2), l1**2 - l2**2 - (self.x1**2 - self.x2**2) - (self.y1**2 - self.y2**2)]
+        inv_mat1 = [[mat1[1][1],-mat1[0][1]],[-mat1[1][0],mat1[0][0]]]
+        x = (mat2[0] * inv_mat1[0][0] + mat2[1] * inv_mat1[0][1]) / det1
+        y = (mat2[0] * inv_mat1[1][0] + mat2[1] * inv_mat1[1][1]) / det1
+        z = (l1**2 - (x - self.x1)**2  - (y - self.y1)**2) ** 0.5
+        return (x, y, z)
+
+    # change endeffector speed to motor speed
+    def end2motor():
+        pass
+
     # generate a valid trajectory from current position to
     # the desired position
     # rpm = 80 * set_torque(value) - 1
     # deg/sec = 480 * set_torque(value) - 6
     # 120 mm per rotation, 120/360 = 1/3 mm/deg
-    # mm/sec = 160 * set_torque(value
-) - 2
+    # mm/sec = 160 * set_torque(value) - 2
     def trajGenerator(self, t):
         x = 7000 + 300 * t + 1.0 / 2 * 80 * t * t
         speed = 300 + 80.0 * t
@@ -111,7 +140,8 @@ class controller():
 if __name__ == "__main__":
     c1 = controller()
 
-    c1.move_to(7000, 7000, 0, 0.08)
+    c1.move_to(3000, 3000, 3000, 0.08)
+    c1.move_to(10000, 10000, 10000, 0.08)
 
     c1.stop()
 
@@ -119,7 +149,7 @@ if __name__ == "__main__":
 
     t0 = time()
 
-    while 1:
+    while 0:
         try:
             traj = c1.trajGenerator(time() - t0)
 

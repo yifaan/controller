@@ -20,10 +20,13 @@ class controller():
         # position of the three motor
         self.x1 = 0
         self.y1 = 200
+        self.z1 = 0
         self.x2 = -173
         self.y2 = -100
+	self.z2 = 0
         self.x3 = 173
         self.y3 = -100
+	self.z3 = 0
         self.range = 5  # about 0.6 degree
         print "initialize done"
 
@@ -87,9 +90,9 @@ class controller():
     # the inverse kinematics of the arm
     def pos2len(self, x, y, z):
         #(x1=,y1=,z1=), (x2=,y2=,z2=)(x3=,y3=,z3=) asda
-        len1 = ((x - x1) ** 2 + (y - y1) ** 2 + (z - z1) ** 2) ** 0.5
-        len2 = ((x - x2) ** 2 + (y - y2) ** 2 + (z - z2) ** 2) ** 0.5
-        len3 = ((x - x3) ** 2 + (y - y3) ** 2 + (z - z3) ** 2) ** 0.5
+        len1 = ((x - self.x1) ** 2 + (y - self.y1) ** 2 + (z - self.z1) ** 2) ** 0.5
+        len2 = ((x - self.x2) ** 2 + (y - self.y2) ** 2 + (z - self.z2) ** 2) ** 0.5
+        len3 = ((x - self.x3) ** 2 + (y - self.y3) ** 2 + (z - self.z3) ** 2) ** 0.5
         return (len1, len2, len3)
 
     # forward kinematics of the 
@@ -107,14 +110,14 @@ class controller():
     # change endeffector speed to motor command value
     def end2servo(self, x, y, z, Vx, Vy, Vz):
         # get the norm of the vector of each cable 
-        l1_norm = ((x - self.x1)**2 + (y - self.y1)**2 + z**2)**0.5
-        l2_norm = ((x - self.x2)**2 + (y - self.y2)**2 + z**2)**0.5
-        l3_norm = ((x - self.x3)**2 + (y - self.y3)**2 + z**2)**0.5
+        l1_norm = ((x - self.x1)**2 + (y - self.y1)**2 + (z - self.z1)**2)**0.5
+        l2_norm = ((x - self.x2)**2 + (y - self.y2)**2 + (z - self.z2)**2)**0.5
+        l3_norm = ((x - self.x3)**2 + (y - self.y3)**2 + (z - self.z3)**2)**0.5
 	
         # get the unit vector on each cable's direction
-        u1 = [(x - self.x1) / l1_norm, (y - self.y1) / l1_norm, z / l1_norm]
-        u2 = [(x - self.x2) / l2_norm, (y - self.y2) / l2_norm, z / l2_norm]
-        u3 = [(x - self.x3) / l3_norm, (y - self.y3) / l3_norm, z / l3_norm]
+        u1 = [(x - self.x1) / l1_norm, (y - self.y1) / l1_norm, (z - self.z1) / l1_norm]
+        u2 = [(x - self.x2) / l2_norm, (y - self.y2) / l2_norm, (z - self.z2) / l2_norm]
+        u3 = [(x - self.x3) / l3_norm, (y - self.y3) / l3_norm, (z - self.z3) / l3_norm]
         # calculate the speed of each cable, mm/s
         V1 = Vx * u1[0] + Vy * u1[1] + Vz * u1[2]
         V2 = Vx * u2[0] + Vy * u2[1] + Vz * u2[2]

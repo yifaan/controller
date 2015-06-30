@@ -20,10 +20,13 @@ class controller():
         # position of the three motor
         self.x1 = 0
         self.y1 = 200
+        self.z1 = 0
         self.x2 = -173
         self.y2 = -100
+	self.z2 = 0
         self.x3 = 173
         self.y3 = -100
+	self.z3 = 0
         self.range = 5  # about 0.6 degree
         print "initialize done"
 
@@ -207,31 +210,31 @@ class controller():
 	if (t<5):
 	   x = 10 * t
 	   y = 10 * t
-	   z = 10 * t
+	   z = 20 * t
 	   Vx = 10
 	   Vy = 10
-	   Vz = 10
+	   Vz = 20
 	elif ((t<10) and (t>=5)):
 	   x = 50-10 * (t-5)
 	   y = 50-10 * (t-5)
-	   z = 50+10 * (t-5)
+	   z = 100+20 * (t-5)
 	   Vx = -10
 	   Vy = -10
-	   Vz = 10
+	   Vz = 20
 	elif ((t<15) and (t>=10)):
 	   x = -10 * (t-10)
 	   y = -10 * (t-10)
-	   z = 100-10 * (t-10)
+	   z = 200-20 * (t-10)
 	   Vx = -10
 	   Vy = -10
-	   Vz = -10
+	   Vz = -20
 	elif ((t<20) and (t>=15)):
 	   x = -50+10 * (t-15)
 	   y = -50+10 * (t-15)
-	   z = 50-10 * (t-15)
+	   z = 100-20 * (t-15)
 	   Vx = 10
 	   Vy = 10
-	   Vz = -10
+	   Vz = -20
 	else:
 	    x = 0
 	    Vx = 0

@@ -2,7 +2,7 @@ import ckbot.logical as L
 from time import sleep, time
 import sys
 import thread
-
+from math import cos, sin
 
 class controller():
 
@@ -19,13 +19,13 @@ class controller():
         self.pos_3 = self.c.at.MOD3.get_pos()
         # position of the three motor
         self.x1 = 0
-        self.y1 = 200
+        self.y1 = 260
         self.z1 = 0
-        self.x2 = -173
-        self.y2 = -100
+        self.x2 = -230
+        self.y2 = -260
         self.z2 = 0
-        self.x3 = 173
-        self.y3 = -100
+        self.x3 = 230
+        self.y3 = -260
         self.z3 = 0
         self.range = 5  # about 0.6 degree
         print "initialize done"
@@ -98,7 +98,7 @@ class controller():
     # forward kinematics of the
     def len2pos(self, l1, l2, l3):
         # mat1 * [x,y]' = mat2
-        mat1 = [[2*(self.x3 - self.x1),2*(self.y3 - self.y1)],[2*(self.x2 - self.x1),2*(self.x3 - self.y1)]]
+        mat1 = [[2*(self.x3 - self.x1),2*(self.y3 - self.y1)],[2*(self.x2 - self.x1),2*(self.x2 - self.y1)]]
         det1 = mat1[0][0] * mat1[1][1] - mat1[0][1] * mat1[1][0]
         mat2 = [l1**2 - l3**2 - (self.x1**2 - self.x3**2) - (self.y1**2 - self.y3**2), l1**2 - l2**2 - (self.x1**2 - self.x2**2) - (self.y1**2 - self.y2**2)]
         inv_mat1 = [[mat1[1][1],-mat1[0][1]],[-mat1[1][0],mat1[0][0]]]
@@ -122,7 +122,7 @@ class controller():
         V1 = Vx * u1[0] + Vy * u1[1] + Vz * u1[2]
         V2 = Vx * u2[0] + Vy * u2[1] + Vz * u2[2]
         V3 = Vx * u3[0] + Vy * u3[1] + Vz * u3[2]
-
+	
         # calculate the commanded torque value according to the cable speed
         # rpm = 80 * set_torque(value) - 1
         # deg/sec = 480 * set_torque(value) - 6
@@ -140,7 +140,7 @@ class controller():
             tval3 = (V3 + 2.0) / 160
         else:
             tval3 = (V3 - 2.0) / 160
-            return (tval1, tval2, tval3)
+        return (tval1, tval2, tval3)
 
     # move in z-direction
     def traj1(self, t):
@@ -243,6 +243,53 @@ class controller():
             z = 0
             Vz = 0
         return (x, y, z, Vx, Vy, Vz)
+    
+    def traj5(self,t):
+        
+        w = 2.0/180 * 3.14
+        if (t < 10):
+            x = 0
+            y = 260 * sin(w * t)
+            z = 260 * cos(w * t)
+            Vx = 0
+            Vy = 260 * w * cos(w * t)
+            Vz = -260 * w * sin(w * t)
+	elif (t<20):
+ 	    x = 0
+	    y = 260 * sin(w * (20 - t))
+            z = 260 * cos(w * (20 - t))
+            Vx = 0
+	    Vy = -260 * w * cos(w * (20-t))
+            Vz = 260 * w * sin(w * (20-t))
+
+        else:
+            x = 0
+            Vx = 0
+            y = 0
+            Vy = 0
+            z = 280
+            Vz = 0
+        return (x,y,z,Vx,Vy,Vz)
+
+    
+    def traj6(self,t):
+        
+        w = 2.0/180 * 3.14
+        if (t < 10):
+            y = 0
+            x = 260 * sin(w * t)
+            z = 260 * cos(w * t)
+            Vy = 0
+            Vx = 260 * w * cos(w * t)
+            Vz = -260 * w * sin(w * t)
+        else:
+            y = 0
+            Vy = 0
+            x = 0
+            Vx = 0
+            z = 280
+            Vz = 0
+        return (x,y,z,Vx,Vy,Vz)
 
     # stop motor and go_slack on each module
     def shut_down(self):
@@ -257,7 +304,9 @@ class controller():
 
 if __name__ == "__main__":
     c1 = controller()
-    c1.move_to(2500, 2500, 2500, 0.08)
+    length = c1.pos2len(0, 0, 280)
+    print length[0], length[1], length[2]
+    #c1.move_to(2500, 2500, 2500, 0.08)
     # c1.move_to(10000, 10000, 10000, 0.08)
     # c1.move_to(3000, 3000, 3000, 0.08)
 
@@ -269,13 +318,16 @@ if __name__ == "__main__":
 
     while 1:
         try:
-            traj = c1.traj4(time() - t0)
+            traj = c1.traj6(time() - t0)
+            
             servo_speed = c1.end2servo(traj[0], traj[1], traj[2], traj[3], traj[4], traj[5])
-            # sys.stdout.write("%.2f\r" % (time() - t0))
+            sys.stdout.write("%.3f\t" % servo_speed[0])
+	    sys.stdout.write("%.3f\t" % servo_speed[1])
+	    sys.stdout.write("%.3f\r" % servo_speed[2])
             # sys.stdout.write("%.3f\r" % servo_speed[0])
             # sys.stdout.write("%5d\n" % c1.pos_1)
-            # sys.stdout.flush()
-
+            sys.stdout.flush()
+	    # print servo_speed[2]
             c1.moveMOD1(servo_speed[0])
             c1.moveMOD2(servo_speed[1])
             c1.moveMOD3(servo_speed[2])
@@ -283,5 +335,5 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             break
 
-    c1.move_to(2500, 2500, 2500, 0.08)
+    #c1.move_to(2500, 2500, 2500, 0.08)
     c1.shut_down()

@@ -20,7 +20,7 @@ class controller():
         # position of the three motor
         self.x1 = 0
         self.y1 = 260
-        self.z1 = 0
+        self.z1 = 55
         self.x2 = -230
         self.y2 = -260
         self.z2 = 0
@@ -142,69 +142,6 @@ class controller():
             tval3 = (V3 - 2.0) / 160
         return (tval1, tval2, tval3)
 
-    # move in z-direction
-    def traj1(self, t):
-        if (t < 5):
-            x = 0
-            y = 0
-            z = 20*t
-            Vx = 0
-            Vy = 0
-            Vz = 20
-        elif ((t >= 5) and (t < 10)):
-            x = 0
-            y = 0
-            z = 100 - 20*(t-5)
-            Vx = 0
-            Vy = 0
-            Vz = -20
-        else:
-            x = 0
-            y = 0
-            z = 0
-            Vx = 0
-            Vy = 0
-            Vz = 0
-        return (x, y, z, Vx, Vy, Vz)
-
-    # move in x-direction
-    def traj2(self, t):
-        if (t < 5):
-            x = 20*t
-            y = 0
-            z = 0
-            Vx = 20
-            Vy = 0
-            Vz = 0
-        elif (t < 10):
-            x = 100 - 20 * (t - 5)
-            y = 0
-            z = 0
-            Vx = -20
-            Vy = 0
-            Vz = 0
-        else:
-            x = 0
-            y = 0
-            z = 0
-            Vx = 0
-            Vy = 0
-            Vz = 0
-        return (x, y, z, Vx, Vy, Vz)
-
-    # move in y-direction
-    def traj3(self, t):
-        x = 0
-        y = 10 * t
-        z = 0
-        Vx = 0
-        Vy = 10
-        Vz = 0
-        if (t > 10):
-            y = 10 * 10
-            Vy = 0
-        return (x, y, z, Vx, Vy, Vz)
-
     # move in xyz-direction
     def traj4(self, t):
         if (t < 5):
@@ -246,7 +183,7 @@ class controller():
     
     def traj5(self,t):
         
-        w = 2.0/180 * 3.14
+        w = 4.0/180 * 3.14
         if (t < 10):
             x = 0
             y = 260 * sin(w * t)
@@ -274,7 +211,7 @@ class controller():
     
     def traj6(self,t):
         
-        w = 2.0/180 * 3.14
+        w = 4.0/180 * 3.14
         if (t < 10):
             y = 0
             x = 260 * sin(w * t)
@@ -282,6 +219,13 @@ class controller():
             Vy = 0
             Vx = 260 * w * cos(w * t)
             Vz = -260 * w * sin(w * t)
+	elif (t<20):
+	    y = 0
+	    x = 260 * sin(w * (20 - t))
+            z = 260 * cos(w * (20 - t))
+            Vy = 0
+	    Vx = -260 * w * cos(w * (20-t))
+            Vz = 260 * w * sin(w * (20-t))
         else:
             y = 0
             Vy = 0
@@ -319,6 +263,27 @@ if __name__ == "__main__":
     while 1:
         try:
             traj = c1.traj6(time() - t0)
+            
+            servo_speed = c1.end2servo(traj[0], traj[1], traj[2], traj[3], traj[4], traj[5])
+            sys.stdout.write("%.3f\t" % servo_speed[0])
+	    sys.stdout.write("%.3f\t" % servo_speed[1])
+	    sys.stdout.write("%.3f\r" % servo_speed[2])
+            # sys.stdout.write("%.3f\r" % servo_speed[0])
+            # sys.stdout.write("%5d\n" % c1.pos_1)
+            sys.stdout.flush()
+	    # print servo_speed[2]
+            c1.moveMOD1(servo_speed[0])
+            c1.moveMOD2(servo_speed[1])
+            c1.moveMOD3(servo_speed[2])
+
+        except KeyboardInterrupt:
+            break
+
+    t0 = time()
+    while 1:
+	
+        try:
+            traj = c1.traj5(time() - t0)
             
             servo_speed = c1.end2servo(traj[0], traj[1], traj[2], traj[3], traj[4], traj[5])
             sys.stdout.write("%.3f\t" % servo_speed[0])
